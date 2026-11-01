@@ -15,11 +15,44 @@ menuButton.addEventListener("click", () => {
 });
 
 navigation.addEventListener("click", (event) => {
-  if (event.target.matches("a")) {
+  if (event.target.closest("a")) {
     navigation.classList.remove("is-open");
     menuButton.setAttribute("aria-expanded", "false");
     menuButton.setAttribute("aria-label", "Открыть меню");
   }
+});
+
+const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+document.querySelectorAll(".app-link").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    if (!isMobileDevice) return;
+
+    event.preventDefault();
+    const appUrl = link.dataset.appUrl;
+    const webUrl = link.dataset.webUrl;
+    let fallbackTimer;
+
+    const cancelFallback = () => {
+      window.clearTimeout(fallbackTimer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", cancelFallback);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) cancelFallback();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", cancelFallback, { once: true });
+
+    fallbackTimer = window.setTimeout(() => {
+      cancelFallback();
+      window.location.assign(webUrl);
+    }, 1400);
+
+    window.location.assign(appUrl);
+  });
 });
 
 const showSlide = (index) => {
